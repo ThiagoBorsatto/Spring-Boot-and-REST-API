@@ -13,7 +13,7 @@ public class HelloController {
 
     @GetMapping("/greet/{name}")
     public String greet(@PathVariable String name) {
-        return greetingService.generateGreeting(name);
+        return greetingService.saveAndGreet(name);
     }
 
 }
