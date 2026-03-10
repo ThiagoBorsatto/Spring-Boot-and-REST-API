@@ -6,11 +6,19 @@ struct AppState {
     pool: sqlx::SqlitePool,
 }
 
+use axum::routing::{delete, put};
 use serde::Serialize;
 
 #[derive(Serialize, FromRow)]
 struct User {
     id: i64,
+    name: String,
+}
+
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+struct UpdateUserRequest {
     name: String,
 }
 
@@ -34,6 +42,9 @@ async fn main() {
     let app = Router::new()
         .route("/", get(|| async { "Hello from Rust"}))
         .route("/greet/:name", get(greet))
+        .route("/users", get(get_users))
+        .route("/users/:id", put(update_user))
+        .route("/users/:id", delete(delete_user))
         .with_state(shared_state);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
@@ -79,6 +90,7 @@ async fn get_all_users(pool: &sqlx::SqlitePool) -> Result<Vec<User>, sqlx::Error
 
 use axum::Json;
 use sqlx::prelude::FromRow;
+use tokio::runtime::Id;
 
 async fn get_users(State(state): State<AppState>) -> Result<Json<Vec<User>>, (StatusCode, String)> {
     let users = get_all_users(&state.pool).await.map_err(|_| {
@@ -86,4 +98,47 @@ async fn get_users(State(state): State<AppState>) -> Result<Json<Vec<User>>, (St
     })?;
 
     Ok(Json(users))
+}
+
+async fn update_user(
+    State(state): State<AppState>,
+    Path(id): Path<i64>,
+    Json(payload): Json<UpdateUserRequest>
+) -> Result<String, (StatusCode, String)> {
+    
+    if payload.name.trim().is_empty() {
+        return Err((StatusCode::BAD_REQUEST, "Name cannot be empty!".to_string()));
+    }
+
+    let result = sqlx::query("UPDATE users SET name = $1 WHERE id = $2")
+        .bind(payload.name.trim())
+        .bind(id)
+        .execute(&state.pool)
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
+
+    if result.rows_affected() == 0 {
+        return Err((StatusCode::NOT_FOUND, "User not found".to_string()));
+    }
+
+    Ok(format!("User {} update successfully!", id))
+}
+
+async fn delete_user(
+    State(state): State<AppState>,
+    Path(id): Path<i64>
+) -> Result<String, (StatusCode, String)> {
+    
+    let result = sqlx::query("DELETE * FROM users WHERE id = $1")
+        .bind(id)
+        .execute(&state.pool)
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
+
+    
+    if result.rows_affected() == 0 {
+        return Err((StatusCode::NOT_FOUND, "User not found!".to_string()));
+    }
+
+    Ok(format!("User {} deleted successfully!", id))
 }

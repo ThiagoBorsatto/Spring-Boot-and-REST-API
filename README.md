@@ -9,6 +9,7 @@ Use the plugin of Spring Boot in VSCode to create the base for the API
 To setup the Spring Boot basic body
 
     http://localhost:8080/greet/YourName
+    http://localhost:8080/users
 
 ## REST API in Rust
 In rust just use the command on the terminal
@@ -16,3 +17,6 @@ In rust just use the command on the terminal
 The basic body has been created
 
     http://127.0.0.1:3000/greet/YourName
+    http://127.0.0.1:3000/users
+
+## cURL

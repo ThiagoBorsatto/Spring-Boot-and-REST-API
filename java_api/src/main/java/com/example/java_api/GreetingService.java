@@ -10,7 +10,7 @@ public class GreetingService {
     private UserRepository userRepository;
 
     public String saveAndGreet(String name) {
-        Users newUser = new Users();
+        User newUser = new User();
         newUser.setName(name);
         userRepository.save(newUser);
 
