@@ -8,7 +8,11 @@ Use the plugin of Spring Boot in VSCode to create the base for the API
     ctrl + Shift + P
 To setup the Spring Boot basic body
 
+    http://localhost:8080/greet/YourName
+
 ## REST API in Rust
 In rust just use the command on the terminal
     cargo new api_name
 The basic body has been created
+
+    http://127.0.0.1:3000/greet/YourName
